@@ -1,6 +1,7 @@
 import math
 import itertools
 import asyncio
+from my_exceptions import DataNotFoundError
 
 
 # from https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
@@ -122,12 +123,13 @@ class Calculator:
         self.arrays = {}
         self.calculations = {}
         self.locks = {}
+        self.kcalc = {}
 
     async def push_data(self, data, symbol):
         lock = self._get_lock(symbol)
         async with lock:  # Wait until lock is free
-            self.kcalc = {}
             self.recalculate(data, symbol)
+            self.kcalc[symbol] = {}
 
     def _get_lock(self, symbol):
         """Ensure each source has its own lock."""
@@ -135,12 +137,18 @@ class Calculator:
             self.locks[symbol] = asyncio.Lock()
         return self.locks[symbol]
 
+
     async def get_kcalc(self, k, symbol):
         k -= 1
         lock = self._get_lock(symbol)
         async with lock:  # Wait until lock is free
-            if k not in self.kcalc:
+            kalc = self.kcalc.get(symbol, {}).get(k, None)
+            if not kalc:
+                if k in self.kcalc.get(symbol, {}): #if another request has already calculated this k
+                    return self.kcalc[symbol][k]
                 calculations = self.calculations.get(symbol, [])
+                if not calculations:
+                    raise DataNotFoundError("There is no data for this symbol")
                 k_pow = 10**k
                 togo = calculations[: min(len(calculations), k + 1)]
                 kvalue = BranchValues.merger(togo, k_pow)
@@ -151,9 +159,10 @@ class Calculator:
                     "variance": kvalue.variance,
                     "last": self.arrays[symbol][-1],
                 }
-
-                self.kcalc[k] = kcalc
-            return self.kcalc[k]
+                if not self.kcalc.get(symbol):
+                    self.kcalc[symbol] = {}
+                self.kcalc[symbol][k] = kcalc
+        return kcalc
 
     def recalculate(self, data, symbol):
         bigarray = self.arrays.get(symbol, [])

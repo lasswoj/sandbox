@@ -20,7 +20,8 @@ When new data comes I only need to recalculate the new data aggregate(/s) and th
 3. the new agregate gets trimmed to previous size creating new spill for the next aggregate and so the cycle goes on
 
 ### Pulling data :
-When user wants to pull data i merge aggregates to the proper length and cache the result for next users.
+- When user wants to pull data i merge aggregates to the proper length and cache the result for next users.
+- If the data is being processed (by recent push) i lock the mutex and wait for the data to be processed -> user needs to wait for processing to end
 
 ### Transactionality:
 When user wants push, or fetch data for certain symbol async mutex for that symbol is locked to block other users from pushing, or getting unprocessed data.
