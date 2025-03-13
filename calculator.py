@@ -1,5 +1,6 @@
 import math
 import itertools
+import asyncio
 
 
 # from https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
@@ -115,33 +116,58 @@ class BranchValues:
 
 class Calculator:
     def __init__(self):
-        self.array = []
-        self.calcs = []
-        self.kcalc = {}
+        self.arrays= {}
+        self.calculations = {}
+        self.locks = {}
 
-    def push_data(self, data):
-        self.kcalc = {}
-        self.recalculate(data)
+    async def push_data(self, data, symbol):
+        lock = self._get_lock(symbol)
+        async with lock:  # Wait until lock is free
+            self.kcalc = {}
+            self.recalculate(data, symbol)
 
-    def get_kcalc(self, k):
+    def _get_lock(self, symbol):
+        """Ensure each source has its own lock."""
+        if symbol not in self.locks:
+            self.locks[symbol] = asyncio.Lock()
+        return self.locks[symbol]
+
+    async def get_kcalc(self, k, symbol):
         k-=1
-        if k not in self.kcalc:
-            k_pow = 10**k
-            togo = self.calcs[:min(len(self.calcs),k+1)]
-            kvalue = BranchValues.merger(togo, k_pow)
-            self.kcalc[k] = kvalue
-        return self.kcalc[k]
+        lock = self._get_lock(symbol)
+        async with lock:  # Wait until lock is free
+            if k not in self.kcalc:
+                calculations = self.calculations.get(symbol, [])
+                k_pow = 10**k
+                togo = calculations[:min(len(calculations),k+1)]
+                kvalue = BranchValues.merger(togo, k_pow)
+                kcalc = {
+                    "avg": kvalue.avg,
+                    "min": kvalue.min,
+                    "max": kvalue.max,
+                    "variance": kvalue.variance,
+                    "last" : self.arrays[symbol][-1]
+                }
+
+                self.kcalc[k] = kcalc
+            return self.kcalc[k]
 
 
 
 
 
-    def recalculate(self, data):
-        self.array.extend(data)
+    def recalculate(self, data, symbol):
+        bigarray = self.arrays.get(symbol, [])
+        bigarray.extend(data)
+        if not self.arrays.get(symbol):
+            self.arrays[symbol] = bigarray
+        calculations = self.calculations.get(symbol, [])
+
+        arr_len = len(bigarray)
         i = 0
         j = 10
         newcalcs = []
-        absolute_start = len(self.array) - len(data)
+        absolute_start = len(bigarray) - len(data)
         while j <= len(data):
             slice_iter = itertools.islice(data, len(data)-j, len(data)-i)
             newcalcs.append(BranchValues.from_chunk(slice_iter, absolute_start+i, absolute_start+j))
@@ -156,13 +182,13 @@ class Calculator:
             reprocess.append(residual)
             tempsum += residual.amount
         old_iter = 0
-        while tempsum<j and old_iter < len(self.calcs):
-            tempsum += self.calcs[old_iter].amount
-            reprocess.append(self.calcs[old_iter])
+        while tempsum<j and old_iter < len(calculations):
+            tempsum += calculations[old_iter].amount
+            reprocess.append(calculations[old_iter])
             old_iter+=1
 
-        while i <= len(self.array) and j<=100000000:
-            start = len(self.array)-i
+        while i <= arr_len and j<=100000000:
+            start = arr_len-i
             merged = BranchValues.merger(reprocess, start)
             if not merged:
                 break
@@ -170,21 +196,21 @@ class Calculator:
             max_amount = j-i
             if merged.amount > max_amount:
                 residual = BranchValues.from_chunk(
-                    itertools.islice(self.array, max(0, len(self.array)-(i+merged.amount)), len(self.array)-j),
-                    len(self.array)-(i+merged.amount),
-                    len(self.array)-j
+                    itertools.islice(bigarray, max(0, arr_len-(i+merged.amount)), arr_len-j),
+                    arr_len-(i+merged.amount),
+                    arr_len-j
                 )
-                merged.subtract(itertools.islice(self.array, len(self.array)-j, len(self.array)-i), len(self.array)-j, len(self.array)-i, residual)
+                merged.subtract(itertools.islice(bigarray, arr_len-j, arr_len-i), arr_len-j, arr_len-i, residual)
                 reprocess.append(residual)
             newcalcs.append(merged)
-            if old_iter < len(self.calcs):
-                reprocess.append(self.calcs[old_iter])
+            if old_iter < len(calculations):
+                reprocess.append(calculations[old_iter])
                 old_iter+=1
             if i==0:
                 i=1
             i*=10
             j*=10
-        self.calcs = newcalcs
+        self.calculations[symbol] = newcalcs
 
 
 
@@ -192,25 +218,25 @@ class Calculator:
 if __name__ == '__main__':
     go = Calculator()
     lo = [i for i in range(5)]
-    go.push_data(lo)
+    go.push_data(lo, "test")
     lo = [i for i in range(5,11)]
-    go.push_data(lo)
+    go.push_data(lo, "test")
     lo = [i for i in range(11,15)]
-    go.push_data(lo)
+    go.push_data(lo, "test")
     lo = [i for i in range(15,20)]
-    go.push_data(lo)
+    go.push_data(lo, "test")
     lo = [i for i in range(20,25)]
-    go.push_data(lo)
-    print(go.get_kcalc(1))
-    go.get_kcalc(2)
+    go.push_data(lo, "test")
+    print(go.get_kcalc(1, "test"))
+    go.get_kcalc(2, "test")
     lo2 = [i for i in range(25,40)]
-    go.push_data(lo2)
+    go.push_data(lo2, "test")
     lo3 = [i for i in range(40,200)]
-    go.push_data(lo3)
+    go.push_data(lo3, "test")
     lo3 = [i for i in range(200, 90000)]
-    go.push_data(lo3)
+    go.push_data(lo3, "test")
     lo3 = [i for i in range(90000, 90010)]
-    go.push_data(lo3)
+    go.push_data(lo3, "test")
     lo3 = [i for i in range(90010, 90020)]
     # go.push_data(lo3)
     # print(go.get_kcalc(4))

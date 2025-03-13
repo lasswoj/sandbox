@@ -1,38 +1,32 @@
-
 from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import List
 from calculator import Calculator
 
 app = FastAPI()
 calculator = Calculator()
 
-@app.post("/push_data/")
-def push_data(data: list[int]):
-    calculator.push_data(data)
+class PostModel(BaseModel):
+    data: List[float]
+    symbol: str
+
+class GetModel(BaseModel):
+    symbol: str
+    k: int
+
+@app.post("/add_batch/")
+async def push_data(data_model: PostModel):
+    await calculator.push_data(data_model.data, data_model.symbol)
     return {"message": "Data pushed successfully"}
 
-@app.get("/get_kcalc/{k}")
-def get_kcalc(k: int):
-    kcalc = calculator.get_kcalc(k)
+@app.get("/stats/{k}/{symbol}")
+async def stats(k: int, symbol: str):
+    kcalc = await calculator.get_kcalc(k, symbol)
     if kcalc:
-        return {
-            "amount": kcalc.amount,
-            "avg": kcalc.avg,
-            "min": kcalc.min,
-            "max": kcalc.max,
-            "variance": kcalc.variance
-        }
+        return kcalc
     return {"message": "kcalc not found"}
 
-@app.post("/recalculate/")
-def recalculate(data: list[int]):
-    calculator.recalculate(data)
-    return {"message": "Recalculation done"}
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
-
-if __name__ == "__main__":
-    pass
