@@ -16,8 +16,8 @@ def parallel_variance(n_a, avg_a, M2_a, n_b, avg_b, M2_b):
 ### Pushing data:
 When new data comes I only need to recalculate the new data aggregate(/s) and the spill in each tree node.
 1. there is new data batch that  needs to squeeze in -> this causes spill on other aggregates
-2. the spilling aggregate gets trimmed to the previous size and the spill is added to the next node
-3. the new agregate gets trimmed to previous size creating new spill and so the cycle goes on
+2. the spilling aggregate gets trimmed to the previous size and the cut spill is prepended to the next aggregate
+3. the new agregate gets trimmed to previous size creating new spill for the next aggregate and so the cycle goes on
 
 ### Pulling data :
 When user wants to pull data i merge aggregates to the proper length and cache the result for next users.
