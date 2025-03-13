@@ -137,14 +137,15 @@ class Calculator:
             self.locks[symbol] = asyncio.Lock()
         return self.locks[symbol]
 
-
     async def get_kcalc(self, k, symbol):
         k -= 1
         lock = self._get_lock(symbol)
         async with lock:  # Wait until lock is free
             kalc = self.kcalc.get(symbol, {}).get(k, None)
             if not kalc:
-                if k in self.kcalc.get(symbol, {}): #if another request has already calculated this k
+                if k in self.kcalc.get(
+                    symbol, {}
+                ):  # if another request has already calculated this k
                     return self.kcalc[symbol][k]
                 calculations = self.calculations.get(symbol, [])
                 if not calculations:

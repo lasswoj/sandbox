@@ -15,7 +15,6 @@ class TestCalculator(unittest.TestCase):
         self.assertEqual(len(self.calculator.arrays[SYMBOL]), 5)
         self.assertEqual(self.calculator.arrays[SYMBOL], data)
 
-
     def test_recalculate(self):
         data = [1, 2, 3, 4, 5]
         self.calculator.recalculate(data, SYMBOL)

@@ -30,17 +30,17 @@ Mutex on one symbol does not affect other symbols.
 
 ### What could be improved:
 This project was estimated for 3 hours but it took around 10 (i had too much fun optimising it especially the variance), so there are some things that could be improved, but ~~they are boring~~ i dont think they are in so scope for the time being I will leave them as a **TODO!**: 
-- I could separate recalculate into multiple chunks (this function is quite big)
+- I could separate recalculate into multiple chunks (this function is quite big) and the readability suffers a bit (tradeoff for performance)
 - I could run profiler to search for any additional bottlenecks
 - I could add more exception handling in case of issues, but that would require more back and forth conversation.
-- I could add precommit hook with linters and test runners
+- I could add pre-commit hook with linters and test runners
 - I could add E2E tests
 
 # Complexity:
 ### Space 
 The project has space complexity of O(log(n))
 - there is no overhead but there is additional aggregates of the power tree.
-- i am using iterators to avoid shallow copying of the data
+- I am using iterators to avoid shallow copying of the data
 
 ### Time 
 The time complexity is O(log(n)), but:
