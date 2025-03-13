@@ -32,7 +32,8 @@ This project was estimated for 3 hours but it took around 10 (i had too much fun
 - I could separate recalculate into multiple chunks (this function is quite big)
 - I could run profiler to search for any additional bottlenecks
 - I could add more exception handling in case of issues, but that would require more back and forth conversation.
-- I could add precommit hook with linters and test running
+- I could add precommit hook with linters and test runners
+- I could add E2E tests
 
 # Complexity:
 ### Space 

@@ -1,29 +1,27 @@
 import unittest
 from calculator import Calculator, BranchValues
 
+SYMBOL = "test"
+
+
 class TestCalculator(unittest.TestCase):
     def setUp(self):
         self.calculator = Calculator()
 
     def test_push_data(self):
         data = [1, 2, 3, 4, 5]
-        self.calculator.push_data(data)
-        self.assertEqual(len(self.calculator.array), 5)
-        self.assertEqual(self.calculator.array, data)
 
-    def test_get_kcalc(self):
-        data = [1, 2, 3, 4, 5]
-        self.calculator.push_data(data)
-        kcalc = self.calculator.get_kcalc(1)
-        self.assertIsNotNone(kcalc)
-        self.assertEqual(kcalc.amount, 5)
-        self.assertAlmostEqual(kcalc.avg, 3.0)
+        self.calculator.recalculate(data, SYMBOL)
+        self.assertEqual(len(self.calculator.arrays[SYMBOL]), 5)
+        self.assertEqual(self.calculator.arrays[SYMBOL], data)
+
 
     def test_recalculate(self):
         data = [1, 2, 3, 4, 5]
-        self.calculator.recalculate(data)
-        self.assertEqual(len(self.calculator.calcs), 1)
-        self.assertEqual(self.calculator.calcs[0].amount, 5)
+        self.calculator.recalculate(data, SYMBOL)
+        self.assertEqual(len(self.calculator.calculations[SYMBOL]), 1)
+        self.assertEqual(self.calculator.calculations[SYMBOL][0].amount, 5)
+
 
 class TestBranchValues(unittest.TestCase):
     def test_from_chunk(self):
@@ -46,5 +44,6 @@ class TestBranchValues(unittest.TestCase):
         self.assertEqual(merged.min, 1)
         self.assertEqual(merged.max, 6)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
