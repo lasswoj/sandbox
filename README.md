@@ -31,7 +31,7 @@ Mutex on one symbol does not affect other symbols.
 This project was estimated for 3 hours but it took around 10 (i had too much fun optimising it especially the variance), so there are some things that could be improved, but ~~they are boring~~ i dont think they are in so scope for the time being I will leave them as a **TODO!**: 
 - I could separate recalculate into multiple chunks (this function is quite big)
 - I could run profiler to search for any additional bottlenecks
-
+- I could add more exception handling in case of issues, but that would require more back and forth conversation.
 # Complexity:
 ### Space 
 The project has space complexity of O(log(n))
