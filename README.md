@@ -15,12 +15,12 @@ def parallel_variance(n_a, avg_a, M2_a, n_b, avg_b, M2_b):
 
 ### Pushing data:
 When new data comes I only need to recalculate the new data aggregate(/s) and the spill in each tree node.
-1. there is initial batch size x that causes spill on new aggregates
+1. there is new data batch that  needs to squeeze in -> this causes spill on new aggregates
 2. the spilling aggregate gets trimmed to the previous size and the spill is added to the next node
 3. the new agregate gets trimmed to previous size creating new spill and so the cycle goes on
 
 ### Pulling data :
-When user wants to pull data i merge aggregates to the propper length and cashe the result for next users.
+When user wants to pull data i merge aggregates to the proper length and cache the result for next users.
 
 ### Transactionality:
 When user wants push, or fetch data for certain symbol async mutex for that symbol is locked to block other users from pushing, or getting unprocessed data.
